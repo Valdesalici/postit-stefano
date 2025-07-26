@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#fffbcc"/>
+  <title>Post-it Interattivo</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+    :root {
+      --bg: #fffbcc;
+      --primary: #f0c000;
+      --text: #333;
+      --done: #bbb;
+      --item-bg: #fff9aa;
+      --shadow: 0 4px 12px rgba(0,0,0,0.1);
+      --radius: 10px;
+    }
+    body {
+      margin: 0;
+      font-family: 'Patrick Hand', cursive;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      color: var(--text);
+    }
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      box-shadow: var(--shadow);
+    }
+    #input {
+      padding: 1rem;
+      border: none;
+      font-size: 1.2rem;
+      width: 100%;
+      box-sizing: border-box;
+      outline: none;
+      border-bottom: 2px solid #ddd;
+      background: white;
+    }
+    #list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .item {
+      background: var(--item-bg);
+      border-radius: var(--radius);
+      padding: 1rem;
+      font-size: 1.2rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.2s ease, opacity 0.2s;
+    }
+    .item:active {
+      transform: scale(0.96);
+    }
+    .item.completed {
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+    .item span {
+      flex: 1;
+    }
+    footer {
+      background: #eee;
+      padding: 0.8rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #555;
+      box-shadow: var(--shadow);
+    }
+    button {
+      background: var(--primary);
+      border: none;
+      color: white;
+      padding: 0.8rem 1.2rem;
+      margin: 1rem;
+      font-size: 1rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>📌 Post-it Interattivo</header>
+  <input id="input" placeholder="Scrivi qualcosa e premi Invio…" autocomplete="off"/>
+  <div id="list"></div>
+
+  <footer>
+    ✓ Tocca per completare – Premi 3s per eliminare<br>
+    <button onclick="condividiWhatsApp()">📤 Condividi su WhatsApp</button>
+  </footer>
+
+  <script>
+    const input = document.getElementById("input");
+    const list = document.getElementById("list");
+
+    const emojiMap = {
+      mela: "🍎", banana: "🍌", arancia: "🍊", pane: "🍞", latte: "🥛",
+      acqua: "💧", uova: "🥚", formaggio: "🧀", carne: "🥩", pesce: "🐟",
+      cipolla: "🧅", aglio: "🧄", patata: "🥔", insalata: "🥬", cioccolato: "🍫",
+      biscotti: "🍪", torta: "🍰", yogurt: "🍦", lenticchie: "🫘", fagioli: "🫘",
+      riso: "🍚", pasta: "🍝", zucchero: "🧂", sale: "🧂", pepe: "🌶️",
+      olio: "🫒", aceto: "🥫", caffe: "☕", "caffè": "☕", tè: "🍵", birra: "🍺", vino: "🍷",
+      sushi: "🍣", hamburger: "🍔", pizza: "🍕", limone: "🍋", fragola: "🍓",
+      peperoni: "🫑", gelato: "🍨", tonno: "🐟", prosciutto: "🥓", bresaola: "🥩",
+      shampoo: "🧴", sapone: "🧼", detergente: "🧼", detersivo: "🧼", "carta igienica": "🧻",
+      tovaglioli: "🧻", sacchetti: "🛍️", piatti: "🍽️", bicchieri: "🥤",
+      penna: "🖊️", notebook: "📔", fiore: "🌸", pianta: "🪴", candela: "🕯️",
+      libri: "📚", telecomando: "📱", chiavi: "🔑", soldi: "💵", regalo: "🎁", dentifricio: "🪥"
+    };
+
+    let items = JSON.parse(localStorage.getItem("postIt")) || [];
+
+    function save() {
+      localStorage.setItem("postIt", JSON.stringify(items));
+    }
+
+    function render() {
+      list.innerHTML = "";
+      items.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "item" + (item.done ? " completed" : "");
+        const span = document.createElement("span");
+        span.textContent = item.icon + " " + item.text;
+        div.appendChild(span);
+
+        div.addEventListener("click", () => {
+          item.done = !item.done;
+          save();
+          render();
+        });
+
+        let pressTimer;
+        div.addEventListener("touchstart", () => {
+          pressTimer = setTimeout(() => {
+            if (navigator.vibrate) navigator.vibrate(100);
+            items.splice(index, 1);
+            save();
+            render();
+          }, 3000);
+        });
+        div.addEventListener("touchend", () => clearTimeout(pressTimer));
+        div.addEventListener("touchmove", () => clearTimeout(pressTimer));
+
+        list.appendChild(div);
+      });
+    }
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && input.value.trim() !== "") {
+        const text = input.value.trim();
+        const key = text.toLowerCase();
+        const icon = emojiMap[key] || "🗒️";
+        items.push({ text, icon, done: false });
+        input.value = "";
+        save();
+        render();
+      }
+    });
+
+    function condividiWhatsApp() {
+      let testo = "📌 Ecco il mio Post-it:\n\n";
+      items.forEach(item => {
+        const stato = item.done ? "✅" : "⬜️";
+        testo += `${stato} ${item.icon} ${item.text}\n`;
+      });
+
+      const encoded = encodeURIComponent(testo);
+      const link = `https://api.whatsapp.com/send?text=${encoded}`;
+      window.open(link, '_blank');
+    }
+
+    render();
+  </script>
+</body>
+</html>
