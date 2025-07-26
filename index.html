@@ -112,11 +112,21 @@
       list.appendChild(item);
 
       let pressTimer;
+
+      // Desktop: mouse
       item.addEventListener("mousedown", () => {
         pressTimer = setTimeout(() => item.remove(), 2000);
       });
       item.addEventListener("mouseup", () => clearTimeout(pressTimer));
       item.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+
+      // Mobile: touch
+      item.addEventListener("touchstart", () => {
+        pressTimer = setTimeout(() => item.remove(), 2000);
+      });
+      item.addEventListener("touchend", () => clearTimeout(pressTimer));
+      item.addEventListener("touchcancel", () => clearTimeout(pressTimer));
+
       item.addEventListener("click", () => {
         item.classList.toggle("done");
       });
